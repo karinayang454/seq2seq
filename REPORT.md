@@ -20,7 +20,7 @@ I used batch_size = 512, n_epochs = 10, with validation every 2 epochs. I applie
   - Model output: a sequence of actions and targets for each episode
 
 
-I implemented an encoder-decoder model with optional attention mechanism. 
+I implemented an encoder-decoder model with optional attention mechanism. Unfortunately, I did not implement the transformer based model :(
 
 ### Encoder
 The encoder reads the sequence inputs in an episode, and produces a sequence of hidden states for each source word. I first embed the input in a word embedding with vocab size 1000, and embedding dimension 128. Then, I feed this into 1 LSTM layer with a hidden dimension of 128. These numbers were chosen rather arbitrarily, but mostly to minimize computation time during training. I also used `pack_padded_sequence` and `pad_packed_sequence` for the LSTM to ignore the paddings during training. The encoder then returns the final output, hidden states, and cell states of the LSTM.
@@ -29,7 +29,7 @@ The encoder reads the sequence inputs in an episode, and produces a sequence of 
 The decoder iteratively generates the next token given the context vector from the encoder and ground truth labels using teacher forcing. The initial state of the decoder is first set to the final output state of the encoder. Each LSTM cell uses the previous hidden state, and the embeddings of concatenated gold actions and targets as input. The embedding dimesnion here is also 128, with 1 LSTM layer using a hidden dimension of 256. To predict the final action and targets, 2 linear layers with output size 11 and 83 were applied to the output of each LSTM cell, respectively, to correspond to the number of action and target classes. 
 
 ### Attention
-The attention mechanism is a global, soft attention, attends to a word-level, and was implemented via a linear layer. For all decoder timesteps, I duplicate and concatenate the current decoder hidden state with each individual hidden state of the encoder, where a linear layer + softmax then calculates the weights of each encoder hidden representation.
+The attention mechanism is a global, soft, flat attention, attends to a word-level, and was implemented via a linear layer. For all decoder timesteps, I duplicate and concatenate the current decoder hidden state with each individual hidden state of the encoder, where a linear layer + softmax then calculates the weights of each encoder hidden representation.
 
 
 ## Model Performance
@@ -77,6 +77,8 @@ I applied 2 different metrics:
 
 For both models, action prediction performed better than target prediction, which is expected since there are less classes in action (11 vs. 83). Exact match for both models was also near 0, as expected, since the output sequences are quite long. 
 
-The encoder decoder with the additional attention mechanism performed significantly worse compared to the model without attention. It was likely difficult for the model to effectively learn which word to attend to during training, so the noisy information from attention would have caused the poor performance. Perhaps if I used instruction level attention instead, or if I simply trained for a longer period of time, the attention-based model would perform better. 
+The encoder decoder with the additional attention mechanism performed significantly worse compared to the model without attention. It was likely difficult for the model to effectively learn which word to attend to during training, so the noisy information from attention would have caused the poor performance. Perhaps if I used instruction level attention instead (hierarchical), or if I simply trained for a longer period of time, the attention-based model would perform better. 
+
+Though I did not implement the transformer based model, I believe that with sufficient training, the model should result in better accuracy (and quicker computation!) than the LSTM encoder-decoder models. However, more data may be needed to see this improvement in performance, unless we are just freeze + finetuning a Transformer based model.
 
 Training and Validation graphs can be found in `outputs/experiments/s2s` and `outputs/experiments/s2s_attention`.
