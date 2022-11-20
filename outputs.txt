@@ -1,0 +1,139 @@
+Using CUDA
+EncoderDecoder(
+  (encoder): Encoder(
+    (emb_layer): Embedding(1000, 128)
+    (LSTM): LSTM(128, 128, batch_first=True)
+  )
+  (decoder): Decoder(
+    (emb_layer_action): Embedding(11, 128)
+    (emb_layer_target): Embedding(83, 128)
+    (LSTM): LSTM(256, 128)
+    (fc_action): Linear(in_features=128, out_features=11, bias=True)
+    (fc_target): Linear(in_features=128, out_features=83, bias=True)
+  )
+)
+train_action_loss: 0.7028151750564575 
+ train_action_exact_match_acc: 0.0 
+ train_action_prefix_match_acc: 0.6068834444297895
+
+
+train_target_loss: 2.733721971511841 
+ train_target_exact_match_acc: 0.0 
+ train_target_prefix_match_acc: 0.14557073058876283
+val_action_loss: 1.1459325551986694 
+ val_action_exact_match_acc acc: 0.0 
+ val_action_prefix_match_acc: 0.5915600609469361
+
+
+val_target_loss: 2.9286317825317383 
+ val__target_exact_match_acc acc: 0.0 
+ val_target_prefix_match_acc: 0.16439772925860505
+Saving model... outputs/experiments/s2s/s2s_model.ckpt
+train_action_loss: 0.36691492795944214 
+ train_action_exact_match_acc: 0.0 
+ train_action_prefix_match_acc: 0.7413435463109718
+
+
+train_target_loss: 1.4528634548187256 
+ train_target_exact_match_acc: 0.0 
+ train_target_prefix_match_acc: 0.23306040932886762
+train_action_loss: 0.33259424567222595 
+ train_action_exact_match_acc: 0.0 
+ train_action_prefix_match_acc: 0.7456450774696598
+
+
+train_target_loss: 1.0629595518112183 
+ train_target_exact_match_acc: 0.0 
+ train_target_prefix_match_acc: 0.36528519602333515
+val_action_loss: 0.8974225521087646 
+ val_action_exact_match_acc acc: 0.0 
+ val_action_prefix_match_acc: 0.6908860201502258
+
+
+val_target_loss: 1.802698016166687 
+ val__target_exact_match_acc acc: 0.0 
+ val_target_prefix_match_acc: 0.37495593195539073
+Saving model... outputs/experiments/s2s/s2s_model.ckpt
+train_action_loss: 0.31827259063720703 
+ train_action_exact_match_acc: 0.0 
+ train_action_prefix_match_acc: 0.7484715203316913
+
+
+train_target_loss: 0.8810295462608337 
+ train_target_exact_match_acc: 0.0 
+ train_target_prefix_match_acc: 0.4650782672188827
+train_action_loss: 0.30975621938705444 
+ train_action_exact_match_acc: 0.0 
+ train_action_prefix_match_acc: 0.7513578338773244
+
+
+train_target_loss: 0.7845842242240906 
+ train_target_exact_match_acc: 0.0 
+ train_target_prefix_match_acc: 0.5268183577059428
+val_action_loss: 0.8447906970977783 
+ val_action_exact_match_acc acc: 0.0 
+ val_action_prefix_match_acc: 0.7119378118318122
+
+
+val_target_loss: 1.582563877105713 
+ val__target_exact_match_acc acc: 0.0 
+ val_target_prefix_match_acc: 0.4496538276742334
+Saving model... outputs/experiments/s2s/s2s_model.ckpt
+train_action_loss: 0.3035922646522522 
+ train_action_exact_match_acc: 0.0 
+ train_action_prefix_match_acc: 0.7541748913674241
+
+
+train_target_loss: 0.7262865900993347 
+ train_target_exact_match_acc: 0.0 
+ train_target_prefix_match_acc: 0.5676904855609786
+train_action_loss: 0.2988903522491455 
+ train_action_exact_match_acc: 2.8306159420289855e-05 
+ train_action_prefix_match_acc: 0.7573062383448765
+
+
+train_target_loss: 0.6877927780151367 
+ train_target_exact_match_acc: 0.0 
+ train_target_prefix_match_acc: 0.5982911305067908
+val_action_loss: 0.817898154258728 
+ val_action_exact_match_acc acc: 0.0 
+ val_action_prefix_match_acc: 0.7212368436840807
+
+
+val_target_loss: 1.5155285596847534 
+ val__target_exact_match_acc acc: 0.0 
+ val_target_prefix_match_acc: 0.4825995269593513
+Saving model... outputs/experiments/s2s/s2s_model.ckpt
+train_action_loss: 0.2951739430427551 
+ train_action_exact_match_acc: 2.8306159420289855e-05 
+ train_action_prefix_match_acc: 0.7610156569656881
+
+
+train_target_loss: 0.6594284772872925 
+ train_target_exact_match_acc: 0.0 
+ train_target_prefix_match_acc: 0.6200318263031376
+train_action_loss: 0.29177960753440857 
+ train_action_exact_match_acc: 7.076539855072464e-05 
+ train_action_prefix_match_acc: 0.7639858278110149
+
+
+train_target_loss: 0.6375768780708313 
+ train_target_exact_match_acc: 0.0 
+ train_target_prefix_match_acc: 0.6389697164660622
+val_action_loss: 0.7746886014938354 
+ val_action_exact_match_acc acc: 0.0 
+ val_action_prefix_match_acc: 0.7336871685297236
+
+
+val_target_loss: 1.4130136966705322 
+ val__target_exact_match_acc acc: 0.0 
+ val_target_prefix_match_acc: 0.5009542781569885
+Saving model... outputs/experiments/s2s/s2s_model.ckpt
+train_action_loss: 0.28959426283836365 
+ train_action_exact_match_acc: 0.00011322463768115942 
+ train_action_prefix_match_acc: 0.7663735792686545
+
+
+train_target_loss: 0.6199424862861633 
+ train_target_exact_match_acc: 2.8306159420289855e-05 
+ train_target_prefix_match_acc: 0.6563111695954781

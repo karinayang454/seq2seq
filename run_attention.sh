@@ -1,0 +1,1 @@
+srun --gres=gpu:2080:1 --time 3:00:00 python train.py --in_data_fn=lang_to_sem_data.json --outputs_dir=outputs/experiments/s2s_attention/ --model_fname=s2s_attention_model.ckpt --batch_size=256 --num_epochs=10 --val_every=2 --teacher_forcing --use_attention > attention_outputs.txt
