@@ -74,10 +74,10 @@ def build_output_tables(train):
             targets.add(t)
     actions_to_index = {a: i+3 for i, a in enumerate(actions)}
     targets_to_index = {t: i+3 for i, t in enumerate(targets)}
-    actions_to_index["<A_BOS>"], actions_to_index["<A_EOS>"] = 0, 1
-    targets_to_index["<T_BOS>"], targets_to_index["<T_EOS>"] = 0, 1
-    actions_to_index["<A_PAD>"] = 2
-    targets_to_index["<T_PAD>"] = 2
+    actions_to_index["<BOS>"], actions_to_index["<EOS>"] = 0, 1
+    targets_to_index["<BOS>"], targets_to_index["<EOS>"] = 0, 1
+    actions_to_index["<PAD>"] = 2
+    targets_to_index["<PAD>"] = 2
     index_to_actions = {actions_to_index[a]: a for a in actions_to_index}
     index_to_targets = {targets_to_index[t]: t for t in targets_to_index}
     return actions_to_index, index_to_actions, targets_to_index, index_to_targets
@@ -90,12 +90,12 @@ def prefix_match(predicted_labels, gt_labels, labels_len):
     bs = len(gt_labels)
     prefix_match = 0.0
     for i in range(bs):
-        j = 0
+        l = 0
         seq_len = int(labels_len[i].item())
-        for j in range(seq_len):
-            if (predicted_labels[i][j] != gt_labels[i][j]) or (predicted_labels[i][j] == 1 and gt_labels[i][j] == 1):
+        for l in range(seq_len):
+            if (predicted_labels[i][l] != gt_labels[i][l]) or (predicted_labels[i][l] == 1 and gt_labels[i][l] == 1):
                 break
-        prefix_match += (j / seq_len)
+        prefix_match += (l / seq_len)
 
     return prefix_match / bs
 
@@ -104,13 +104,13 @@ def exact_match(predicted_labels, gt_labels, labels_lens):
     bs = len(gt_labels)
     exact_match = 0.0
     for i in range(bs):
-        cont = True
+        x = True
         seq_len = int(labels_lens[i].item())
         for j in range(seq_len):
             if predicted_labels[i][j] != gt_labels[i][j]:
-                cont = False
+                x = False
                 break
-        exact_match += 1 if cont else 0
+        exact_match += 1 if x else 0
     return exact_match / bs
 
 
@@ -122,7 +122,7 @@ def encode_data(data, vocab_to_index, seq_len, actions_to_index, targets_to_inde
     max_len_pair = 0
     for (idx, episode) in enumerate(data):
         x[idx][0] = vocab_to_index["<BOS>"]
-        ep_y = [[actions_to_index["<A_BOS>"], targets_to_index["<T_BOS>"]]]
+        ep_y = [[actions_to_index["<BOS>"], targets_to_index["<BOS>"]]]
         
         jdx = 1
         for seq in episode:
@@ -142,7 +142,7 @@ def encode_data(data, vocab_to_index, seq_len, actions_to_index, targets_to_inde
                 break
         # add stop to the seq and labels
         x[idx][jdx] = vocab_to_index["<EOS>"]
-        ep_y.append([actions_to_index["<A_EOS>"], targets_to_index["<T_EOS>"]])
+        ep_y.append([actions_to_index["<EOS>"], targets_to_index["<EOS>"]])
 
         # add to total y labels
         y.append(ep_y)
@@ -150,7 +150,7 @@ def encode_data(data, vocab_to_index, seq_len, actions_to_index, targets_to_inde
 
     # pad to the max len pair
     for idx, episode_label in enumerate(y):
-        y[idx].extend((max_len_pair - len(episode_label))*[[actions_to_index["<A_PAD>"], targets_to_index["<T_PAD>"]]])
+        y[idx].extend((max_len_pair - len(episode_label))*[[actions_to_index["<PAD>"], targets_to_index["<PAD>"]]])
 
     return np.array(x), np.array(y)
 

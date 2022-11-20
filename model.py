@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 import torch.nn.functional as F
+from torch.autograd import Variable
 
 
 class Encoder(nn.Module):
@@ -18,6 +19,8 @@ class Encoder(nn.Module):
         self.vocab_size = vocab_size
         self.LSTM = nn.LSTM(input_size=embedding_dim, hidden_size=hidden_dim, num_layers=num_layers,
                             batch_first=True)
+        self.num_layers = num_layers
+        self.hidden_dim = hidden_dim
 
     def forward(self, episodes, seq_lens):
         # episodes: bs, seq length
@@ -30,8 +33,10 @@ class Encoder(nn.Module):
         # output: bs, seq len, hidden size
         # hn: 1, bs, hidden size
         # cn: 1, bs, hiddne size
+        h_0 = Variable(torch.zeros(self.num_layers, episodes.size(0), self.hidden_dim))  
+        c_0 = Variable(torch.zeros(self.num_layers, episodes.size(0), self.hidden_dim))
         self.LSTM = self.LSTM.to(self.device)
-        output, (hn, cn) = self.LSTM(emb_out)
+        output, (hn, cn) = self.LSTM(emb_out, (h_0, c_0))
 
         padded_output, _ = pad_packed_sequence(output, batch_first=True)
 
@@ -67,8 +72,7 @@ class Decoder(nn.Module):
         self.emb_layer_target = nn.Embedding(num_embeddings=num__targets, embedding_dim=embedding_dim)
 
         #LSTM
-        self.LSTM = nn.LSTM(input_size=embedding_dim*2, hidden_size=hidden_dim, num_layers=num_layers,
-                            dropout=dropout)
+        self.LSTM = nn.LSTM(input_size=256, hidden_size=hidden_dim, num_layers=num_layers, dropout=dropout)
 
         # linear layers for each action target output
         self.fc_action = nn.Linear(hidden_dim, num_actions)
@@ -76,6 +80,8 @@ class Decoder(nn.Module):
 
         if use_attn:
             self.attention = Attention(hidden_dim, device)
+        else: 
+            self.attention = None
 
     def forward(self, label, hn, cn, enc_hidden_outputs):
 
@@ -87,7 +93,7 @@ class Decoder(nn.Module):
         # get LSTM output, hn and cn
         lstm_out, (new_hn, new_cn) = self.LSTM(embedding_out, (hn, cn))
         if self.use_attn:
-            lstm_out = self.attention(new_hn[self.num_layers - 1], enc_hidden_outputs).unsqueeze(0)
+            lstm_out = self.attention(new_hn[0], enc_hidden_outputs).unsqueeze(0)
 
         action_output = self.fc_action(lstm_out).squeeze(0)
         target_output = self.fc_target(lstm_out).squeeze(0)
@@ -115,17 +121,19 @@ class EncoderDecoder(nn.Module):
         self.use_attn = use_attn
         self.device = device
 
+        # vocab_size, embedding_dim, hidden_dim, num_layers, dropout, device
         self.encoder = Encoder(vocab_size, embedding_dim, hidden_dim, num_layers, dropout, device)
-        
+        # embedding_dim, hidden_dim, num_layers, dropout, num_actions, num_targets, self.use_attn, device
         self.decoder = Decoder(embedding_dim, hidden_dim, num_layers, dropout, num_actions, num_targets, self.use_attn, device)
 
 
     def forward(self, episodes, labels, seq_lens, teacher_force=True):
-
+        
+        # print(episodes.shape)
         bs, num_instructions = len(labels), len(labels[0])
         labels = torch.transpose(labels, 0, 1)
 
-
+        # pass through encoder
         encoder_lstm_out, hn, cn = self.encoder(episodes, seq_lens)
 
         # init vars to store predicted distribution across actions and targets
@@ -139,13 +147,19 @@ class EncoderDecoder(nn.Module):
         # begin w <BOS> tokens
         pred_action_target = torch.zeros((2, bs), dtype=torch.long, device=self.device)
 
+        # iterative decoding
         for i in range(1, num_instructions):
             action_out, target_out, hn, cn = self.decoder(pred_action_target, hn, cn, encoder_lstm_out)
             
             predicted_action = torch.argmax(action_out, dim=1)
             predicted_target = torch.argmax(target_out, dim=1)
-            # concatenate the preds togeher
-            pred_action_target = torch.concat((predicted_action, predicted_target)).reshape(2, bs)
+
+            # Use gold_labels for teacher_force
+            if teacher_force:
+                pred_action_target = torch.transpose(labels[i], 0, 1) 
+            else:
+                # concatenate the preds togeher
+                pred_action_target = torch.concat((predicted_action, predicted_target)).reshape(2, bs)
 
             # update results
             action_distribution[i] = action_out
@@ -153,9 +167,7 @@ class EncoderDecoder(nn.Module):
             actions_pred[i] = predicted_action
             targets_pred[i] = predicted_target
 
-            # Use gold_labels for teacher_force
-            if teacher_force:
-                pred_action_target = torch.transpose(labels[i], 0, 1) 
+            
 
         # reshape
         actions_pred = torch.transpose(actions_pred, 0, 1)
@@ -173,7 +185,7 @@ class Attention(nn.Module):
         super(Attention, self).__init__()
 
         self.hidden_dim = hidden_dim
-        self.attn_score = nn.Linear(in_features=2 * hidden_dim, out_features=1)
+        self.fc1 = nn.Linear(in_features=2 * hidden_dim, out_features=1)
         self.device = device
 
     def forward(self, decoder_hidden, enc_hidden_outputs):
@@ -182,14 +194,14 @@ class Attention(nn.Module):
 
         bs, seq_len = int(enc_hidden_outputs.shape[0]), int(enc_hidden_outputs.shape[1])
 
-        # concatenate every encoder hs w decoder hs
-        rep_decoder_hidden = torch.zeros((bs, seq_len, self.hidden_dim), device = self.device)
+        # duplicate the hidden state ofthe decoder
+        dup_decoder_hidden = torch.zeros((bs, seq_len, self.hidden_dim), device = self.device)
         for i in range(len(decoder_hidden)):
-            rep_decoder_hidden[i] = decoder_hidden[i].repeat(1, seq_len, 1)
+            dup_decoder_hidden[i] = decoder_hidden[i].repeat(1, seq_len, 1)
 
-        concatenated_hidden = torch.cat((rep_decoder_hidden, enc_hidden_outputs), dim=2)
+        # concatenate the hidden of the decoder with each encoder hidden
+        concatenated_hidden = torch.cat((dup_decoder_hidden, enc_hidden_outputs), dim=2)
 
-        # get attn scores
-        attn_scores = self.attn_score(concatenated_hidden)
-        weights = F.softmax(attn_scores, dim=1)
-        return torch.bmm(enc_hidden_outputs.transpose(1, 2), weights).squeeze(2)
+        # get output weights
+        out = F.softmax(self.fc1(concatenated_hidden), dim=1)
+        return torch.bmm(enc_hidden_outputs.transpose(1, 2), out).squeeze(2)

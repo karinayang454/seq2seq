@@ -84,8 +84,7 @@ def setup_model(args, device, vocab_size, num_actions, num_targets):
     # of feeding the model prediction into the recurrent model,
     # you will give the embedding of the target token.
     # ===================================================== #
-    # model_name: str, input_bos_token_id: int, input_eos_token_id: int, output_bos_token_id: int,
-    # output_eos_token_id
+
     embedding_dim = 128
     hidden_dim = 128
     num_layers = 1
@@ -160,6 +159,7 @@ def train_epoch(
     training=True,
 ):
     """
+    # TODO: implement function for greedy decoding.
     # This function should input the instruction sentence
     # and autoregressively predict the target label by selecting
     # the token with the highest probability at each step.
@@ -167,13 +167,10 @@ def train_epoch(
     # your decoder because you want to pick the token
     # with the highest probability instead of using the
     # teacher-forced token.
-
     # e.g. Input: "Walk straight, turn left to the counter. Put the knife on the table."
     # Output: [(GoToLocation, diningtable), (PutObject, diningtable)]
     # Also write some code to compute the accuracy of your
     # predictions against the ground truth.
-
-    --> Implemented in the EncoderDecoder model
     """
 
     epoch_loss_a, epoch_loss_t = 0.0, 0.0
@@ -231,6 +228,7 @@ def train_epoch(
         #action scores
         action_exact_match_score = exact_match(actions_pred, action_labels, labels_lens)
         action_prefix_match_score = prefix_match(actions_pred, action_labels, labels_lens)
+        print(actions_pred, action_labels)
 
         #target scores
         target_exact_match_score = exact_match(targets_pred, target_labels, labels_lens)

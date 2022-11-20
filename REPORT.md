@@ -37,7 +37,7 @@ The attention mechanism is a global, soft attention, attends to a word-level, an
 ### Evaluation Metrics
 I applied 2 different metrics:
 - Exact Match: measures frequency of gold sequences and predicted sequences being the exact same
-- Prefix match: measures proportion of matching action/target labels there are between predicted sequences and gold sequences, starting from the beginning of the sequence
+- Prefix match: measures proportion of matching action/target labels there are between predicted sequences and gold sequences
 
 ### Encoder-Decoder Performance
 
@@ -75,7 +75,7 @@ I applied 2 different metrics:
 - Val target exact match: 0.0
 - Val target prefix match: 0.1281798
 
-For both models, action prediction performed better than target prediction, which is expected since there are less classes in action (11 vs. 83). Exact match for both models was also near 0, as expected, since the output sequences are quite long. When visualizing the outputs, I foudn that many predicted outputs were semantically close to the gold sequence, though the strings were not exactly matching; it would be interesting to apply the BLEU metric here.
+For both models, action prediction performed better than target prediction, which is expected since there are less classes in action (11 vs. 83). Exact match for both models was also near 0, as expected, since the output sequences are quite long. 
 
 The encoder decoder with the additional attention mechanism performed significantly worse compared to the model without attention. It was likely difficult for the model to effectively learn which word to attend to during training, so the noisy information from attention would have caused the poor performance. Perhaps if I used instruction level attention instead, or if I simply trained for a longer period of time, the attention-based model would perform better. 
 
